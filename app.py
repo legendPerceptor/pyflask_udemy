@@ -11,10 +11,13 @@ from resources.store import Store, StoreList
 from datetime import timedelta
 from flask import jsonify
 
+
+import os
+
 app = Flask(__name__)
 app.secret_key = "jose123"
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///data.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.config['JWT_AUTH_URL_RULE'] = '/login'
