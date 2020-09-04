@@ -14,6 +14,11 @@ class Item(Resource):
         help="This field cannot be left blank"
     )
     
+    parser.add_argument('store_id',
+        type=int,
+        required=True,
+        help="Every item needs a store_id.")
+
     @jwt_required()
     def get(self, name):
         item = ItemModel.find_item_by_name(name)
@@ -30,8 +35,8 @@ class Item(Resource):
             return {'message': "An item with name '{}' already exists.".format(name)}, 400
         
         data = Item.parser.parse_args()
-        item = ItemModel(name, data['price'])
-        item.insert()
+        item = ItemModel(name, **data)
+        item.save_to_db()
         
         return {"message":"Inserted a new item" , "name":item.name, "price":item.price}, 201
 
@@ -43,25 +48,27 @@ class Item(Resource):
         if item is None:
             return {"Message":"there is no such item named {} inside the database. Delete failed!".format(name)}
 
-        item.delete()
+        item.delete_from_db()
         return {'item': name, 'message': 'Item deleted'}
     
     @jwt_required()
     def put(self, name):
         
         data = Item.parser.parse_args()
-        #new_item = {'name':name, 'price':data['price']}
-        new_item = ItemModel(name, data['price'])
-        # no loop version
-        #item = next(filter(lambda x: x['name']==name, items), None)
         item = ItemModel.find_item_by_name(name)
 
         if item:
-            new_item.update()
-            return {'message':'Modified an existing item', 'name':new_item.name, 'price':new_item.price}
+            if 'price' in data:
+                item.price = data['price']
+            if 'store_id' in data:
+                item.store_id = data['store_id']
+
+            item.save_to_db()
+            return {'message':'Modified an existing item', 'name':item.name, 'price':item.price, 'store_id':item.store_id}
         else:
-            new_item.insert()
-            return {'message':'Created a new item', 'name':new_item.name, 'price':new_item.price}
+            new_item = ItemModel(name, **data)
+            new_item.save_to_db()
+            return {'message':'Created a new item', 'name':new_item.name, 'price':new_item.price, 'store_id': item.store_id}
 
 
 
@@ -71,3 +78,5 @@ class ItemList(Resource):
         
         itemlist = ItemModel.find_item_all()
         return {'items': itemlist}
+
+        # return {'items': list(map(lambda x: x.json(), ItemModel.query.all()))}

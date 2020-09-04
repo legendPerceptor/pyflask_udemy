@@ -25,10 +25,14 @@ class UserRegister(Resource):
         if user:
             return {"Message":"The user has already been registered"}, 400
 
-        connection = sqlite3.connect('data.db')
-        cursor = connection.cursor()
-        query = "INSERT INTO users VALUES (NULL, ?, ?)"
-        cursor.execute(query, (data['username'], data['password']))
-        connection.commit()
-        connection.close()
+        # connection = sqlite3.connect('data.db')
+        # cursor = connection.cursor()
+        # query = "INSERT INTO users VALUES (NULL, ?, ?)"
+        # cursor.execute(query, (data['username'], data['password']))
+        # connection.commit()
+        # connection.close()
+        
+        #user = UserModel(None, data['username'], data['password'])
+        user = UserModel(None, **data)
+        user.save_to_db()
         return {"Message": "User created successfully."}, 201
